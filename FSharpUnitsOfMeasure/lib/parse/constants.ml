@@ -1,24 +1,37 @@
-(** Copyright 2024, Vlasenco Daniel and Strelnikov Andrew *)
+(** Copyright 2024, Vlasenco Daniel and Kudrya Alexandr *)
 
 (** SPDX-License-Identifier: MIT *)
 
 (** This file contains parsers for part of F# 4.1 grammar, taken from
     https://fsharp.org/specs/language-spec/4.1/FSharpSpec-4.1-latest.pdf, page 292 *)
 
-open Base
 open Angstrom
 open Ast
 open Common
 open Units_of_measure
 
-(** [parse_const] parses any constant and returns it as a constant type. Cannot parse surrouning whitespaces. *)
-let parse_const =
+(** [puconst] parses any (unsigned) constant and returns it as a constant type.
+    Should be used for expression parsing. Cannot parse surrouning whitespaces. *)
+let puconst =
   choice
-    [ (parse_char >>| fun c -> Const_char c)
-    ; (parse_string >>| fun s -> Const_string s)
-    ; (parse_bool >>| fun b -> Const_bool b)
-    (* ; (parse_unit_of_measure >>| fun u -> Const_unit_of_measure u) *)
-    ; (parse_int >>| fun i -> Const_int i)
-    ; (parse_float >>| fun f -> Const_float f)
+    [ (pchar >>| fun c -> Const_char c)
+    ; (pstring >>| fun s -> Const_string s)
+    ; (pbool >>| fun b -> Const_bool b)
+    ; (puom >>| fun m -> Const_unit_of_measure m)
+    ; (pint >>| fun i -> Const_int i)
+    ; (pfloat >>| fun f -> Const_float f)
+    ]
+;;
+
+(** [psconst] parses any (probably signed) constant and returns it as a constant type.
+    Should be used for pattern parsing. Cannot parse surrouning whitespaces. *)
+let psconst =
+  choice
+    [ (pchar >>| fun c -> Const_char c)
+    ; (pstring >>| fun s -> Const_string s)
+    ; (pbool >>| fun b -> Const_bool b)
+    ; (puom >>| fun m -> Const_unit_of_measure m)
+    ; (psint >>| fun i -> Const_int i)
+    ; (psfloat >>| fun f -> Const_float f)
     ]
 ;;

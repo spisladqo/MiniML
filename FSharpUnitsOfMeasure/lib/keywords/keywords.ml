@@ -1,4 +1,4 @@
-(** Copyright 2024, Vlasenco Daniel and Strelnikov Andrew *)
+(** Copyright 2024, Vlasenco Daniel and Kudrya Alexandr *)
 
 (** SPDX-License-Identifier: MIT *)
 
@@ -21,7 +21,9 @@ let is_keyword = function
   | "then"
   | "true"
   | "type"
-  | "with" -> true
+  | "with"
+  | "Some"
+  | "None" -> true
   | _ -> false
 ;;
 

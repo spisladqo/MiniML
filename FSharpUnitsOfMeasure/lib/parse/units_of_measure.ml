@@ -1,4 +1,4 @@
-(** Copyright 2024, Vlasenco Daniel and Strelnikov Andrew *)
+(** Copyright 2024, Vlasenco Daniel and Kudrya Alexandr *)
 
 (** SPDX-License-Identifier: MIT *)
 
@@ -10,32 +10,34 @@ open Angstrom
 open Ast
 open Common
 
-let parse_measure_num_int = parse_int >>| fun i -> Mnum_int i
-let parse_measure_num_float = parse_float >>| fun f -> Mnum_float f
-let parse_measure_num = parse_measure_num_int <|> parse_measure_num_float
-let parse_measure_ident = parse_ident >>| fun id -> Measure_ident id
+let pm_num_int = psint >>| fun i -> Mnum_int i
+let pm_num_float = psfloat >>| fun f -> Mnum_float f
+let pm_num = pm_num_int <|> pm_num_float
+let pm_id = pid >>| fun id -> Measure_ident id
+let pm_diml = skip_token "1" *> return Measure_dimless
+let pm_atom pm = choice [ skip_token "(" *> pm <* skip_token ")"; pm_id; pm_diml ]
 
-let parse_exp =
-  let* sign = option "" (string "-") in
-  let* num = skip_ws *> parse_int in
-  (* match sign with
-     | "-" -> return (Neg_int_exp num)
-     | _ -> return (Pos_int_exp num)
-  *)
-  return num
+let pm_pow pm_atom =
+  let p_expo =
+    let* sign = skip_token "^" *> option "" (string "-") in
+    let* num = skip_ws *> pint in
+    return (if String.( = ) sign "-" then -num else num)
+  in
+  let* m = pm_atom in
+  let* exp = option 1 p_expo in
+  match exp with
+  | 0 -> return @@ Measure_dimless
+  | 1 -> return @@ m
+  | -1 -> return @@ Measure_div (Measure_dimless, m)
+  | p when p > 1 -> return @@ Measure_pow (m, exp)
+  | n when n < -1 ->
+    let exp = -exp in
+    return @@ Measure_div (Measure_dimless, Measure_pow (m, exp))
+  | _ -> fail "Cannot parse measure power"
 ;;
 
-(* Power has highest priority*)
-let parse_measure_power parse_measure =
-  let* measure = parse_measure in
-  let* exp = option 1 (skip_token "^" *> parse_exp) in
-  return (Measure_pow (measure, exp))
-;;
-
-(* Sequence should have higher priority than product and division *)
-(* I think that chainls are needed to save left associativity *)
-let parse_measure_power_seq parse_measure =
-  let* seq = many1 (skip_ws *> parse_measure_power parse_measure) in
+let pm_pow_seq pm_p =
+  let* seq = many1 (skip_ws *> pm_pow pm_p) in
   let wrap = function
     | h :: tl -> return @@ List.fold tl ~init:h ~f:(fun x y -> Measure_prod (x, y))
     | _ -> fail "Cannot parse measure sequence"
@@ -43,15 +45,19 @@ let parse_measure_power_seq parse_measure =
   wrap seq
 ;;
 
-let parse_measure =
-  let parse_measure =
-    parse_measure_power_seq parse_measure_ident <|> parse_measure_ident
-  in
-  skip_ws *> parse_measure <* skip_ws
+let pm_prod = skip_token "*" *> return (fun m1 m2 -> Measure_prod (m1, m2))
+let pm_div = skip_token "/" *> return (fun m1 m2 -> Measure_div (m1, m2))
+
+let pm =
+  fix (fun pm ->
+    let pm = pm_pow_seq (pm_pow (pm_atom pm)) in
+    (* let pm = pm_diml <|> pm in *)
+    let pm = chainl pm (pm_prod <|> pm_div) <|> pm in
+    skip_ws *> pm <* skip_ws_no_nl)
 ;;
 
-let parse_unit_of_measure =
-  let* num = skip_ws *> parse_measure_num in
-  let* measure = string "<" *> parse_measure_ident <* skip_ws <* string ">" in
+let puom =
+  let* num = skip_ws *> pm_num in
+  let* measure = string "<" *> pm <* skip_ws <* string ">" in
   return (Unit_of_measure (num, measure))
 ;;

@@ -1,22 +1,21 @@
-(** Copyright 2024, Vlasenco Daniel and Strelnikov Andrew *)
+(** Copyright 2024, Vlasenco Daniel and Kudrya Alexandr *)
 
 (** SPDX-License-Identifier: MIT *)
 
 (** This file contains parsers for part of F# 4.1 grammar, taken from
     https://fsharp.org/specs/language-spec/4.1/FSharpSpec-4.1-latest.pdf, page 292 *)
 
-open Base
 open Angstrom
 open Ast
 
-(** [parse_pat] accepts pattern and returns it *)
-val parse_pat : pattern t
+(** [ppat] accepts pattern and returns it *)
+val ppat : pattern t
 
-(** [parse_pat_wild] accepts [ _ ] pattern and returns it *)
-val parse_pat_wild : pattern t
+(** [ppat_wild] accepts [ _ ] pattern and returns it *)
+val ppat_wild : pattern t
 
-(** [parse_pat_ident_or_op] accepts identificator or operator pattern and returns it *)
-val parse_pat_ident_or_op : pattern t
+(** [ppat_id_or_op] accepts identificator or operator pattern and returns it *)
+val ppat_id_or_op : pattern t
 
-(** [parse_pat_const] accepts constant pattern and returns it *)
-val parse_pat_const : pattern t
+(** [ppat_const] accepts constant pattern and returns it *)
+val ppat_const : pattern t
