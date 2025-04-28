@@ -1,2 +1,19 @@
+# Lambda template
+_build
+_coverage
+/_esy
+/node_modules
+/esy.lock
+/.melange.eobjs
+
+# Fsharp
+test
+*.fs
+*.fsi
+
+# Fsharp Ionide
+.fake
+
+# MS
 _build
 .DS_Store
