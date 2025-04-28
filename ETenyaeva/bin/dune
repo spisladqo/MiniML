@@ -1,7 +1,0 @@
-(executable
- (name REPL)
- (public_name REPL)
- (libraries ETenyaeva_lib))
-
-(cram
- (deps ./REPL.exe %{bin:REPL}))
